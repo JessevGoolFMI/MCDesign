@@ -1,0 +1,118 @@
+@startuml
+namespace TestDesign {
+    class DefaultModuleFactory << (S,Aquamarine) >> {
+        + CreateModule(id string, controller IMediator) *Module
+        + CreateSpecialModule(id string, controller IMediator, specialValue <font color=blue>interface</font>{}) *SpecialModule
+
+    }
+    interface ICommand  {
+        + Execute(module *Module) error
+
+    }
+    interface IMediator  {
+        + SendCommand(command ICommand, targetID string) 
+        + GetModule(id string) *Module
+        + Subscribe(subscriberID string, publisherID string, valueName string) 
+        + Unsubscribe(subscriberID string, publisherID string, valueName string) 
+        + NotifySubscribers(publisherID string, valueName string, value <font color=blue>interface</font>{}) 
+
+    }
+    interface IModuleFactory  {
+        + CreateModule(id string, controller IMediator) *Module
+        + CreateSpecialModule(id string, controller IMediator, specialValue <font color=blue>interface</font>{}) *SpecialModule
+
+    }
+    class MasterController << (S,Aquamarine) >> {
+        - modules <font color=blue>map</font>[string]*Module
+        - subscriptions <font color=blue>map</font>[string]<font color=blue>map</font>[string]bool
+        - commandQueue <font color=blue>chan</font> commandWithTargetID
+        - wg sync.WaitGroup
+        - mu sync.Mutex
+
+        - processCommands() 
+
+        + DisplaySubscriptions() 
+        + Subscribe(subscriberID string, publisherID string, valueName string) 
+        + Wait() 
+        + Unsubscribe(subscriberID string, publisherID string, valueName string) 
+        + NotifySubscribers(publisherID string, valueName string, value <font color=blue>interface</font>{}) 
+        + RegisterModule(module <font color=blue>interface</font>{}) error
+        + UnregisterModule(moduleId string) error
+        + SendCommand(command ICommand, targetID string) 
+        + GetModule(id string) *Module
+
+    }
+    class Module << (S,Aquamarine) >> {
+        - id string
+        - notifier NotificationCallback
+        - state State
+        - stopChan <font color=blue>chan</font> <font color=blue>struct</font>{}
+
+        + Mediator IMediator
+
+        - startBackgroundProcess() 
+
+        + GetId() string
+        + GetState() State
+        + SetState(state State) 
+        + TransitionToRunning() 
+        + StopBackgroundProcess() 
+        + NotifySubscriber(valueName string, value <font color=blue>interface</font>{}) 
+        + SetNotificationCallback(callback NotificationCallback) 
+        + SubscribeToTopic(topic string, target string) 
+        + UnsubscribeFromTopic(topic string, target string) 
+        + PublishToTopic(topic string, value <font color=blue>interface</font>{}) 
+
+    }
+    class PublishValueCommand << (S,Aquamarine) >> {
+        - publisherID string
+        - topic string
+        - value <font color=blue>interface</font>{}
+
+        + Execute(module *Module) error
+
+    }
+    class SpecialModule << (S,Aquamarine) >> {
+        - specialValue <font color=blue>interface</font>{}
+
+    }
+    class SubscribeCommand << (S,Aquamarine) >> {
+        - subscriberID string
+        - publisherID string
+        - topic string
+
+        + Execute(module *Module) error
+        + GetTargetID() string
+
+    }
+    class TestDesign.NotificationCallback << (T, #FF7700) >>  {
+    }
+    class TestDesign.State << (T, #FF7700) >>  {
+    }
+    class UnsubscribeCommand << (S,Aquamarine) >> {
+        - subscriberID string
+        - publisherID string
+        - topic string
+
+        + Execute(module *Module) error
+
+    }
+    class commandWithTargetID << (S,Aquamarine) >> {
+        - command ICommand
+        - targetID string
+
+    }
+}
+"TestDesign.Module" *-- "extends""TestDesign.SpecialModule"
+
+"TestDesign.IModuleFactory" <|-- "implements""TestDesign.DefaultModuleFactory"
+"TestDesign.IMediator" <|-- "implements""TestDesign.MasterController"
+"TestDesign.ICommand" <|-- "implements""TestDesign.PublishValueCommand"
+"TestDesign.ICommand" <|-- "implements""TestDesign.SubscribeCommand"
+"TestDesign.ICommand" <|-- "implements""TestDesign.UnsubscribeCommand"
+
+"TestDesign.Module""uses" o-- "TestDesign.IMediator"
+
+"TestDesign.<font color=blue>func</font>(string, <font color=blue>interface</font>{}) " #.. "alias of""TestDesign.NotificationCallback"
+"__builtin__.int" #.. "alias of""TestDesign.State"
+@enduml
