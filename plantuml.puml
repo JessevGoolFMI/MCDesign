@@ -46,16 +46,18 @@ namespace TestDesign {
         - id string
         - notifier NotificationCallback
         - state State
-        - stopChan <font color=blue>chan</font> <font color=blue>struct</font>{}
+        - stopChan <font color=blue>chan</font> byte
 
         + Mediator IMediator
 
         - startBackgroundProcess() 
+        - resolveErrorAndResume() 
 
         + GetId() string
         + GetState() State
         + SetState(state State) 
         + TransitionToRunning() 
+        + ResolveError() 
         + StopBackgroundProcess() 
         + NotifySubscriber(valueName string, value <font color=blue>interface</font>{}) 
         + SetNotificationCallback(callback NotificationCallback) 

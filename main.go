@@ -2,7 +2,9 @@ package main
 
 import (
 	"fmt"
+	"math/rand"
 	"mcs/TestDesign"
+	"sync"
 	"time"
 )
 
@@ -88,7 +90,13 @@ func subscriptions() {
 	testUnregisterModule(controller, module2)
 	time.Sleep(time.Second * 10)
 	testErrorState(module1)
+	time.Sleep(time.Second * 10)
+	testErrorState(module2)
+	time.Sleep(time.Second * 10)
 
+	unregisterRandomModules(controller, 10)
+	time.Sleep(time.Second * 10)
+	unregisterRandomModulesAsync(controller, 1000)
 	//Keep main running for a few more seconds before shutting down
 	time.Sleep(time.Second * 10)
 
@@ -108,7 +116,7 @@ func testUnregisterModule(controller *TestDesign.MasterController, module *TestD
 	fmt.Println("------------------------------------")
 	moduleId := module.GetId()
 	fmt.Printf("Unregistering %s\n", moduleId)
-	err := controller.UnregisterModule(module.GetId())
+	err := controller.UnregisterModule(moduleId)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -127,14 +135,80 @@ func testUnregisterModule(controller *TestDesign.MasterController, module *TestD
 
 func testErrorState(module *TestDesign.Module) {
 	fmt.Println("------------------------------------")
-	fmt.Println("Putting module 1 in error state")
+	fmt.Printf("Putting %v in error state\n", module.GetId())
 	module.SetState(TestDesign.ErrorState)
-	fmt.Println("Module 1 should be in error state")
+	fmt.Printf("%v should be in error state\n", module.GetId())
 	fmt.Println("------------------------------------")
 	time.Sleep(time.Second * 10)
 	fmt.Println("------------------------------------")
-	fmt.Println("Putting module 1 in running state")
+	fmt.Printf("Putting %v in running state\n", module.GetId())
 	module.SetState(TestDesign.RunningState)
-	fmt.Println("Module 1 should be in running state")
+	fmt.Printf("%v should be in running state\n", module.GetId())
 	fmt.Println("------------------------------------")
+}
+
+func unregisterRandomModule(controller *TestDesign.MasterController, module *TestDesign.Module) {
+	fmt.Println("Unregistering module:", module.GetId())
+	err := controller.UnregisterModule(module.GetId())
+	if err != nil {
+		fmt.Println("Error unregistering module:", err)
+		return
+	}
+	fmt.Printf("Unregistered %v\n", module.GetId())
+	time.Sleep(time.Second * 10)
+	fmt.Println("Registering module:", module.GetId())
+	err = controller.RegisterModule(module)
+	if err != nil {
+		fmt.Println("Error registering module:", err)
+		return
+	}
+	fmt.Printf("Registered %v\n", module.GetId())
+
+}
+
+// Helper function to select random modules to unregister
+func selectRandomModules(controller *TestDesign.MasterController, amount int) []*TestDesign.Module {
+	controllerModules := controller.GetModules()
+	keys := make([]string, 0, len(controllerModules))
+	for key := range controllerModules {
+		keys = append(keys, key)
+	}
+
+	modulesToUnregister := make([]*TestDesign.Module, 0, amount)
+	for i := 0; i < amount; i++ {
+		if len(keys) == 0 {
+			// If there are no more modules to select, break the loop.
+			break
+		}
+		randomIndex := rand.Intn(len(keys))
+		randomKey := keys[randomIndex]
+		modulesToUnregister = append(modulesToUnregister, controllerModules[randomKey])
+	}
+	return modulesToUnregister
+}
+
+func unregisterRandomModules(controller *TestDesign.MasterController, amount int) {
+	fmt.Println("------------------------------------")
+	fmt.Printf("Unregistering %d modules synchronously\n", amount)
+	modulesToUnregister := selectRandomModules(controller, amount)
+	for _, module := range modulesToUnregister {
+		unregisterRandomModule(controller, module)
+	}
+}
+
+func unregisterRandomModulesAsync(controller *TestDesign.MasterController, amount int) {
+	fmt.Println("------------------------------------")
+	fmt.Printf("Unregistering %d modules asynchronously\n", amount)
+	modulesToUnregister := selectRandomModules(controller, amount)
+	var wg sync.WaitGroup
+
+	for _, module := range modulesToUnregister {
+		wg.Add(1)
+		go func(m *TestDesign.Module) {
+			defer wg.Done()
+			unregisterRandomModule(controller, m)
+		}(module)
+	}
+
+	wg.Wait()
 }

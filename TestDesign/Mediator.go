@@ -65,6 +65,10 @@ func NewMasterController() *MasterController {
 	return mc
 }
 
+func (mc *MasterController) GetModules() map[string]*Module {
+	return mc.modules
+}
+
 func (mc *MasterController) processCommands() {
 	defer mc.wg.Done()
 	for command := range mc.commandQueue {
@@ -144,6 +148,7 @@ func (mc *MasterController) RegisterModule(module interface{}) error {
 }
 
 func (mc *MasterController) UnregisterModule(moduleId string) error {
+	//Can add something in here that notifies modules if their subscribed module unregisters
 	if mc.modules[moduleId] != nil {
 		delete(mc.modules, moduleId)
 	} else {

@@ -42,7 +42,7 @@ type Module struct {
 	notifier NotificationCallback
 	Mediator IMediator
 	state    State
-	stopChan chan struct{}
+	stopChan chan byte
 }
 
 func NewModule(id string, controller IMediator) *Module {
@@ -50,7 +50,7 @@ func NewModule(id string, controller IMediator) *Module {
 		id:       id,
 		Mediator: controller,
 		state:    InitState, // Initialize the state to InitState
-		stopChan: make(chan struct{}),
+		stopChan: make(chan byte),
 	}
 	return module
 }
@@ -77,6 +77,10 @@ func (m *Module) TransitionToRunning() {
 	}
 }
 
+func (m *Module) ResolveError() {
+	m.resolveErrorAndResume()
+}
+
 func (m *Module) startBackgroundProcess() {
 	ticker := time.NewTicker(500 * time.Millisecond)
 	defer ticker.Stop()
@@ -86,8 +90,17 @@ func (m *Module) startBackgroundProcess() {
 			fmt.Printf("Module %s background process stopped.\n", m.id)
 			return
 		case <-ticker.C:
+			// Check if the module is in ErrorState
+			if m.state == ErrorState {
+				fmt.Printf("Module %s is in error state, pausing background process.\n", m.id)
+				// Pause the process by waiting for a signal to resume
+				<-m.stopChan // This will block until the module is signaled to resume
+				continue     // Skip the rest of the loop iteration
+			}
 			number, err := fetchRandomNumber()
 			if err != nil {
+				m.SetState(ErrorState) // Transition to ErrorState on error
+				fmt.Printf("Module %s encountered an error: %v\n", m.id, err)
 				return
 			}
 			m.PublishToTopic("randomInt", number)
@@ -95,10 +108,17 @@ func (m *Module) startBackgroundProcess() {
 	}
 }
 
+func (m *Module) resolveErrorAndResume() {
+	// Hypothetical error resolution logic here
+	fmt.Printf("Module %s error resolved, resuming background process.\n", m.id)
+	m.SetState(RunningState) // Transition back to RunningState
+	m.stopChan <- 1          // Send a signal to resume the background process
+}
+
 func (m *Module) StopBackgroundProcess() {
 	if m.state == RunningState {
-		m.state = ShutdownState  // Transition to Shutdown state
-		m.stopChan <- struct{}{} // Signal the background process to stop
+		m.state = ShutdownState // Transition to Shutdown state
+		m.stopChan <- 0         // Signal the background process to stop
 	}
 }
 
@@ -118,15 +138,21 @@ func (m *Module) SetNotificationCallback(callback NotificationCallback) {
 }
 
 func (m *Module) SubscribeToTopic(topic string, target string) {
-	m.Mediator.SendCommand(&SubscribeCommand{subscriberID: m.id, publisherID: target, topic: topic}, target)
+	if m.state != ErrorState {
+		m.Mediator.SendCommand(&SubscribeCommand{subscriberID: m.id, publisherID: target, topic: topic}, target)
+	}
 }
 
 func (m *Module) UnsubscribeFromTopic(topic string, target string) {
-	m.Mediator.SendCommand(&UnsubscribeCommand{subscriberID: m.id, publisherID: target, topic: topic}, target)
+	if m.state != ErrorState {
+		m.Mediator.SendCommand(&UnsubscribeCommand{subscriberID: m.id, publisherID: target, topic: topic}, target)
+	}
 }
 
 func (m *Module) PublishToTopic(topic string, value interface{}) {
-	m.Mediator.SendCommand(&PublishValueCommand{publisherID: m.id, topic: topic, value: value}, m.id)
+	if m.state != ErrorState {
+		m.Mediator.SendCommand(&PublishValueCommand{publisherID: m.id, topic: topic, value: value}, m.id)
+	}
 }
 
 type SpecialModule struct {
