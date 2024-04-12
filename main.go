@@ -5,6 +5,7 @@ import (
 	"math/rand"
 	"mcs/TestDesign"
 	"mcs/TestDesign/Strategies/CompressorStrategies"
+	"mcs/TestDesign/Strategies/DispenserStrategies"
 	"sync"
 	"time"
 )
@@ -53,12 +54,12 @@ func subscriptions() {
 	if err != nil {
 		return
 	}
-	module3 := factory.CreateModule("module3", controller)
-	err = controller.RegisterModule(module3)
+	dispenserModule := factory.CreateDispenserModule("dispenserModule", controller, "Dispenser Value")
+	err = controller.RegisterModule(dispenserModule)
 	if err != nil {
 		return
 	}
-	compressorModule := factory.CreateCompressorModule("compressorModule", controller, "Special value")
+	compressorModule := factory.CreateCompressorModule("compressorModule", controller, "Compressor value")
 	err = controller.RegisterModule(compressorModule)
 	compressorModule.TransitionToRunning()
 	if err != nil {
@@ -71,7 +72,7 @@ func subscriptions() {
 
 	// Module1 requests to subscribe to Module2's "x" value updates
 	module1.SubscribeToTopic("x", "module2")
-	module1.UnsubscribeFromTopic("x", "module3")
+	module1.UnsubscribeFromTopic("x", "dispenserModule")
 	module2.SubscribeToTopic("randomInt", "compressorModule")
 	module2.SubscribeToTopic("randomInt", "module1")
 
@@ -102,7 +103,26 @@ func subscriptions() {
 	time.Sleep(time.Second * 10)
 
 	testCompressorModule(compressorModule)
+	testDispenserModule(dispenserModule)
+}
 
+func testDispenserModule(module *TestDesign.DispenserModule) {
+	strategyFactory := DispenserStrategies.DispenserFactory{}
+	fmt.Println("------------------------------------")
+	versions := []string{"v1", "v2", "v3", "v4", "v5"}
+	for _, version := range versions {
+		if strategy, err := strategyFactory.CreateStrategy(version); err == nil {
+			module.SetDispenserStrategy(strategy)
+			compressed, err := module.Dispense()
+			if err != nil {
+				fmt.Println(err)
+			}
+			fmt.Println(compressed)
+		} else {
+			fmt.Println(err)
+		}
+	}
+	fmt.Println("------------------------------------")
 }
 
 func testCompressorModule(module *TestDesign.CompressorModule) {

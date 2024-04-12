@@ -181,10 +181,35 @@ func NewCompressorModule(id string, controller IMediator, specialValue interface
 	}
 }
 
+type DispenserModule struct {
+	*Module
+	specialValue interface{}
+	dispenser    Strategies.Strategy
+}
+
+func (dm *DispenserModule) Dispense() (interface{}, error) {
+	if dm.dispenser == nil {
+		return nil, errors.New("execute wasn't set correctly")
+	}
+	return dm.dispenser.Execute(dm.specialValue)
+}
+
+func (dm *DispenserModule) SetDispenserStrategy(strategy Strategies.Strategy) {
+	dm.dispenser = strategy
+}
+
+func NewDispenserModule(id string, controller IMediator, specialValue interface{}) *DispenserModule {
+	return &DispenserModule{
+		Module:       NewModule(id, controller),
+		specialValue: specialValue,
+	}
+}
+
 // IModuleFactory interface
 type IModuleFactory interface {
 	CreateModule(id string, controller IMediator) *Module
 	CreateCompressorModule(id string, controller IMediator, specialValue interface{}) *CompressorModule
+	CreateDispenserModule(id string, controller IMediator, specialValue interface{}) *DispenserModule
 }
 
 // DefaultModuleFactory implementation
@@ -196,4 +221,8 @@ func (f *DefaultModuleFactory) CreateModule(id string, controller IMediator) *Mo
 
 func (f *DefaultModuleFactory) CreateCompressorModule(id string, controller IMediator, specialValue interface{}) *CompressorModule {
 	return NewCompressorModule(id, controller, specialValue)
+}
+
+func (f *DefaultModuleFactory) CreateDispenserModule(id string, controller IMediator, specialValue interface{}) *DispenserModule {
+	return NewDispenserModule(id, controller, specialValue)
 }

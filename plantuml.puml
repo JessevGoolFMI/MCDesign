@@ -1,8 +1,56 @@
 @startuml
+namespace CompressorStrategies {
+    class CompressorFactory << (S,Aquamarine) >> {
+        + CreateStrategy(identifier string) (Strategies.Strategy, error)
+
+    }
+    class CompressorV1 << (S,Aquamarine) >> {
+        + Execute(value <font color=blue>interface</font>{}) (<font color=blue>interface</font>{}, error)
+
+    }
+    class CompressorV2 << (S,Aquamarine) >> {
+        + Execute(value <font color=blue>interface</font>{}) (<font color=blue>interface</font>{}, error)
+
+    }
+    class CompressorV3 << (S,Aquamarine) >> {
+        + Execute(value <font color=blue>interface</font>{}) (<font color=blue>interface</font>{}, error)
+
+    }
+    class CompressorV4 << (S,Aquamarine) >> {
+        + Execute(value <font color=blue>interface</font>{}) (<font color=blue>interface</font>{}, error)
+
+    }
+}
+
+"Strategies.StrategyFactory" <|-- "implements""CompressorStrategies.CompressorFactory"
+"Strategies.Strategy" <|-- "implements""CompressorStrategies.CompressorV1"
+"Strategies.Strategy" <|-- "implements""CompressorStrategies.CompressorV2"
+"Strategies.Strategy" <|-- "implements""CompressorStrategies.CompressorV3"
+"Strategies.Strategy" <|-- "implements""CompressorStrategies.CompressorV4"
+
+namespace Strategies {
+    interface Strategy  {
+        + Execute(value <font color=blue>interface</font>{}) (<font color=blue>interface</font>{}, error)
+
+    }
+    interface StrategyFactory  {
+        + CreateStrategy(identifier string) (Strategy, error)
+
+    }
+}
+
 namespace TestDesign {
+    class CompressorModule << (S,Aquamarine) >> {
+        - specialValue <font color=blue>interface</font>{}
+        - compressor Strategies.Strategy
+
+        + Compress() (<font color=blue>interface</font>{}, error)
+        + SetCompressorStrategy(strategy Strategies.Strategy) 
+
+    }
     class DefaultModuleFactory << (S,Aquamarine) >> {
         + CreateModule(id string, controller IMediator) *Module
-        + CreateSpecialModule(id string, controller IMediator, specialValue <font color=blue>interface</font>{}) *SpecialModule
+        + CreateCompressorModule(id string, controller IMediator, specialValue <font color=blue>interface</font>{}) *CompressorModule
 
     }
     interface ICommand  {
@@ -19,7 +67,7 @@ namespace TestDesign {
     }
     interface IModuleFactory  {
         + CreateModule(id string, controller IMediator) *Module
-        + CreateSpecialModule(id string, controller IMediator, specialValue <font color=blue>interface</font>{}) *SpecialModule
+        + CreateCompressorModule(id string, controller IMediator, specialValue <font color=blue>interface</font>{}) *CompressorModule
 
     }
     class MasterController << (S,Aquamarine) >> {
@@ -31,6 +79,7 @@ namespace TestDesign {
 
         - processCommands() 
 
+        + GetModules() <font color=blue>map</font>[string]*Module
         + DisplaySubscriptions() 
         + Subscribe(subscriberID string, publisherID string, valueName string) 
         + Wait() 
@@ -74,10 +123,6 @@ namespace TestDesign {
         + Execute(module *Module) error
 
     }
-    class SpecialModule << (S,Aquamarine) >> {
-        - specialValue <font color=blue>interface</font>{}
-
-    }
     class SubscribeCommand << (S,Aquamarine) >> {
         - subscriberID string
         - publisherID string
@@ -105,7 +150,7 @@ namespace TestDesign {
 
     }
 }
-"TestDesign.Module" *-- "extends""TestDesign.SpecialModule"
+"TestDesign.Module" *-- "extends""TestDesign.CompressorModule"
 
 "TestDesign.IModuleFactory" <|-- "implements""TestDesign.DefaultModuleFactory"
 "TestDesign.IMediator" <|-- "implements""TestDesign.MasterController"

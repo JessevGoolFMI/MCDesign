@@ -141,6 +141,8 @@ func (mc *MasterController) RegisterModule(module interface{}) error {
 		mc.modules[m.id] = m
 	} else if sm, ok := module.(*CompressorModule); ok {
 		mc.modules[sm.id] = sm.Module
+	} else if sm, ok := module.(*DispenserModule); ok {
+		mc.modules[sm.id] = sm.Module
 	} else {
 		return errors.New("module not supported")
 	}

@@ -2,9 +2,6 @@ module mcs
 
 go 1.21
 
-require (
-	github.com/jfeliu007/goplantuml v1.6.2 // indirect
-	github.com/spf13/afero v1.8.2 // indirect
-	github.com/zack4coding/go-flowchart v0.0.0-20190221130008-b2f80789b390 // indirect
-	golang.org/x/text v0.3.7 // indirect
-)
+require golang.org/x/crypto v0.0.0-20211108221036-ceb1ce70b4fa
+
+require golang.org/x/sys v0.0.0-20210615035016-665e8c7367d1 // indirect
