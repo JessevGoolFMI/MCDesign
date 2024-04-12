@@ -7,7 +7,7 @@ import (
 
 type CompressorFactory struct{}
 
-func (f *CompressorFactory) CreateStrategy(identifier string) (Strategies.IStrategy, error) {
+func (f *CompressorFactory) CreateStrategy(identifier string) (Strategies.Strategy, error) {
 	switch identifier {
 	case "v1":
 		return &CompressorV1{}, nil

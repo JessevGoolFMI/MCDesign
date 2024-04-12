@@ -1,6 +1,7 @@
 package TestDesign
 
 import (
+	"errors"
 	"fmt"
 	"mcs/TestDesign/Strategies"
 	"time"
@@ -159,14 +160,17 @@ func (m *Module) PublishToTopic(topic string, value interface{}) {
 type CompressorModule struct {
 	*Module
 	specialValue interface{}
-	compressor   Strategies.IStrategy
+	compressor   Strategies.Strategy
 }
 
 func (cm *CompressorModule) Compress() (interface{}, error) {
+	if cm.compressor == nil {
+		return nil, errors.New("execute wasn't set correctly")
+	}
 	return cm.compressor.Execute(cm.specialValue)
 }
 
-func (cm *CompressorModule) SetCompressorStrategy(strategy Strategies.IStrategy) {
+func (cm *CompressorModule) SetCompressorStrategy(strategy Strategies.Strategy) {
 	cm.compressor = strategy
 }
 

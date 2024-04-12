@@ -1,5 +1,5 @@
 package Strategies
 
-type IStrategy interface {
+type Strategy interface {
 	Execute(value interface{}) (interface{}, error)
 }
