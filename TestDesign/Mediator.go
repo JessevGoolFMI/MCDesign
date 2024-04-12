@@ -7,7 +7,7 @@ import (
 )
 
 /*
-This file contains the implementation of a simple mediator pattern in Go, specifically designed for managing and executing commands in a thread-safe manner. The MasterController struct serves as the central mediator, facilitating communication between different modules (Module and SpecialModule) by managing subscriptions, executing commands, and notifying subscribers about value changes.
+This file contains the implementation of a simple mediator pattern in Go, specifically designed for managing and executing commands in a thread-safe manner. The MasterController struct serves as the central mediator, facilitating communication between different modules (Module and CompressorModule) by managing subscriptions, executing commands, and notifying subscribers about value changes.
 
 Key Features:
 
@@ -139,7 +139,7 @@ func (mc *MasterController) NotifySubscribers(publisherID, valueName string, val
 func (mc *MasterController) RegisterModule(module interface{}) error {
 	if m, ok := module.(*Module); ok {
 		mc.modules[m.id] = m
-	} else if sm, ok := module.(*SpecialModule); ok {
+	} else if sm, ok := module.(*CompressorModule); ok {
 		mc.modules[sm.id] = sm.Module
 	} else {
 		return errors.New("module not supported")

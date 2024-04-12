@@ -2,11 +2,12 @@ package TestDesign
 
 import (
 	"fmt"
+	"mcs/TestDesign/Strategies"
 	"time"
 )
 
 /*
-This file defines the Module and SpecialModule structs, along with their associated methods and factory interfaces, in the context of a mediator pattern implementation. The Module struct represents a generic module that can subscribe to values, unsubscribe from values, and publish values. The SpecialModule extends the Module with additional functionality, showcasing how modules can be specialized for specific purposes.
+This file defines the Module and CompressorModule structs, along with their associated methods and factory interfaces, in the context of a mediator pattern implementation. The Module struct represents a generic module that can subscribe to values, unsubscribe from values, and publish values. The CompressorModule extends the Module with additional functionality, showcasing how modules can be specialized for specific purposes.
 
 Key Features:
 
@@ -18,9 +19,9 @@ Key Features:
 
     Subscription and Publishing Methods: The Module provides methods to subscribe to and unsubscribe from values (SubscribeToTopic and UnsubscribeFromTopic), as well as to publish values (PublishToTopic). These methods utilize the mediator to send commands for subscription, unsubscription, and publication.
 
-    SpecialModule Struct: The SpecialModule extends the Module with an additional field (specialValue), demonstrating how modules can be specialized for specific purposes. It inherits all methods from the Module struct, including subscription, unsubscription, and publishing methods.
+    CompressorModule Struct: The CompressorModule extends the Module with an additional field (specialValue), demonstrating how modules can be specialized for specific purposes. It inherits all methods from the Module struct, including subscription, unsubscription, and publishing methods.
 
-    IModuleFactory Interface and DefaultModuleFactory Implementation: These components provide a factory pattern for creating instances of Module and SpecialModule. The IModuleFactory interface defines methods for creating modules, and the DefaultModuleFactory provides a default implementation of these methods. This design supports the creation of modules without directly instantiating the structs, promoting code flexibility and maintainability.
+    IModuleFactory Interface and DefaultModuleFactory Implementation: These components provide a factory pattern for creating instances of Module and CompressorModule. The IModuleFactory interface defines methods for creating modules, and the DefaultModuleFactory provides a default implementation of these methods. This design supports the creation of modules without directly instantiating the structs, promoting code flexibility and maintainability.
 
 This file exemplifies the use of the mediator pattern in Go, focusing on the creation and interaction of modules within a system. It demonstrates how modules can be specialized for specific purposes while maintaining a common interface for communication and value management. The factory pattern for module creation further enhances the design, making it easier to instantiate modules and specialized modules as needed.
 */
@@ -155,13 +156,22 @@ func (m *Module) PublishToTopic(topic string, value interface{}) {
 	}
 }
 
-type SpecialModule struct {
+type CompressorModule struct {
 	*Module
 	specialValue interface{}
+	compressor   Strategies.IStrategy
 }
 
-func NewSpecialModule(id string, controller IMediator, specialValue interface{}) *SpecialModule {
-	return &SpecialModule{
+func (cm *CompressorModule) Compress() (interface{}, error) {
+	return cm.compressor.Execute(cm.specialValue)
+}
+
+func (cm *CompressorModule) SetCompressorStrategy(strategy Strategies.IStrategy) {
+	cm.compressor = strategy
+}
+
+func NewCompressorModule(id string, controller IMediator, specialValue interface{}) *CompressorModule {
+	return &CompressorModule{
 		Module:       NewModule(id, controller),
 		specialValue: specialValue,
 	}
@@ -170,7 +180,7 @@ func NewSpecialModule(id string, controller IMediator, specialValue interface{})
 // IModuleFactory interface
 type IModuleFactory interface {
 	CreateModule(id string, controller IMediator) *Module
-	CreateSpecialModule(id string, controller IMediator, specialValue interface{}) *SpecialModule
+	CreateCompressorModule(id string, controller IMediator, specialValue interface{}) *CompressorModule
 }
 
 // DefaultModuleFactory implementation
@@ -180,6 +190,6 @@ func (f *DefaultModuleFactory) CreateModule(id string, controller IMediator) *Mo
 	return NewModule(id, controller)
 }
 
-func (f *DefaultModuleFactory) CreateSpecialModule(id string, controller IMediator, specialValue interface{}) *SpecialModule {
-	return NewSpecialModule(id, controller, specialValue)
+func (f *DefaultModuleFactory) CreateCompressorModule(id string, controller IMediator, specialValue interface{}) *CompressorModule {
+	return NewCompressorModule(id, controller, specialValue)
 }

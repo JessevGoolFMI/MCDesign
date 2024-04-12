@@ -4,12 +4,13 @@ import (
 	"fmt"
 	"math/rand"
 	"mcs/TestDesign"
+	"mcs/TestDesign/Strategies/CompressorStrategies"
 	"sync"
 	"time"
 )
 
 /*
-This Go program demonstrates the use of a mediator pattern to manage interactions between modules in a Go application. It showcases the creation, registration, and dynamic management of modules through a central mediator, the MasterController. The program also introduces a specialized module, SpecialModule, which can subscribe to values and set a custom notification callback.
+This Go program demonstrates the use of a mediator pattern to manage interactions between modules in a Go application. It showcases the creation, registration, and dynamic management of modules through a central mediator, the MasterController. The program also introduces a specialized module, CompressorModule, which can subscribe to values and set a custom notification callback.
 
 Key Components and Flow:
 
@@ -17,11 +18,11 @@ Key Components and Flow:
 
     Module Creation and Registration: The program creates three modules (module1, module2, module3) and a specialized module (specialModule) using the DefaultModuleFactory. Each module is registered with the MasterController.
 
-    Subscription and Unsubscription: The example demonstrates how modules can subscribe to and unsubscribe from values. Module1 subscribes to Module2's "x" value updates and later unsubscribes. SpecialModule subscribes to Module2's "x" value updates and sets a custom notification callback to handle value updates.
+    Subscription and Unsubscription: The example demonstrates how modules can subscribe to and unsubscribe from values. Module1 subscribes to Module2's "x" value updates and later unsubscribes. CompressorModule subscribes to Module2's "x" value updates and sets a custom notification callback to handle value updates.
 
-    Value Publishing: A goroutine simulates Module2's "x" value changing every 500 milliseconds. When Module2 publishes a new value, the mediator notifies all subscribers, including Module1 and SpecialModule.
+    Value Publishing: A goroutine simulates Module2's "x" value changing every 500 milliseconds. When Module2 publishes a new value, the mediator notifies all subscribers, including Module1 and CompressorModule.
 
-    Specialized Module: The SpecialModule is a specialized version of the Module that includes an additional field (specialValue). It demonstrates how modules can be extended to provide additional functionality, such as setting a custom notification callback.
+    Specialized Module: The CompressorModule is a specialized version of the Module that includes an additional field (specialValue). It demonstrates how modules can be extended to provide additional functionality, such as setting a custom notification callback.
 
     Dynamic Subscription Management: The example includes dynamic subscription management, where Module1 unsubscribes from Module2's "x" value updates and then resubscribes after a delay. This showcases the flexibility of the mediator pattern in managing subscriptions.
 
@@ -57,21 +58,21 @@ func subscriptions() {
 	if err != nil {
 		return
 	}
-	specialModule := factory.CreateSpecialModule("specialModule", controller, "Special value")
-	err = controller.RegisterModule(specialModule)
-	specialModule.TransitionToRunning()
+	compressorModule := factory.CreateCompressorModule("compressorModule", controller, "Special value")
+	err = controller.RegisterModule(compressorModule)
+	compressorModule.TransitionToRunning()
 	if err != nil {
 		return
 	}
-	specialModule.SubscribeToTopic("x", "module2")
-	specialModule.SetNotificationCallback(func(valueName string, value any) {
-		fmt.Printf("This is a message from the callback in specialModule %v %v\n", valueName, value)
+	compressorModule.SubscribeToTopic("x", "module2")
+	compressorModule.SetNotificationCallback(func(valueName string, value any) {
+		fmt.Printf("This is a message from the callback in compressorModule %v %v\n", valueName, value)
 	})
 
 	// Module1 requests to subscribe to Module2's "x" value updates
 	module1.SubscribeToTopic("x", "module2")
 	module1.UnsubscribeFromTopic("x", "module3")
-	module2.SubscribeToTopic("randomInt", "specialModule")
+	module2.SubscribeToTopic("randomInt", "compressorModule")
 	module2.SubscribeToTopic("randomInt", "module1")
 
 	// Simulate Module2's "x" value changing every 500 ms
@@ -100,6 +101,54 @@ func subscriptions() {
 	//Keep main running for a few more seconds before shutting down
 	time.Sleep(time.Second * 10)
 
+	testCompressorModule(compressorModule)
+
+}
+
+func testCompressorModule(module *TestDesign.CompressorModule) {
+	strategyFactory := CompressorStrategies.CompressorFactory{}
+	fmt.Println("------------------------------------")
+	strategy, err := strategyFactory.CreateStrategy("v1")
+	if err != nil {
+		return
+	}
+	module.SetCompressorStrategy(strategy)
+	compressed, err := module.Compress()
+	if err != nil {
+		fmt.Println("Oof")
+	}
+	fmt.Println(compressed)
+	strategy, err = strategyFactory.CreateStrategy("v2")
+	if err != nil {
+		return
+	}
+	module.SetCompressorStrategy(strategy)
+	compressed, err = module.Compress()
+	if err != nil {
+		fmt.Println("Oof")
+	}
+	fmt.Println(compressed)
+	strategy, err = strategyFactory.CreateStrategy("v3")
+	if err != nil {
+		return
+	}
+	module.SetCompressorStrategy(strategy)
+	compressed, err = module.Compress()
+	if err != nil {
+		fmt.Println("Oof")
+	}
+	fmt.Println(compressed)
+	strategy, err = strategyFactory.CreateStrategy("v4")
+	if err != nil {
+		return
+	}
+	module.SetCompressorStrategy(strategy)
+	compressed, err = module.Compress()
+	if err != nil {
+		fmt.Println("Oof")
+	}
+	fmt.Println(compressed)
+	fmt.Println("------------------------------------")
 }
 
 func testSubscriptions(controller *TestDesign.MasterController, module *TestDesign.Module) {
