@@ -108,59 +108,18 @@ func subscriptions() {
 func testCompressorModule(module *TestDesign.CompressorModule) {
 	strategyFactory := CompressorStrategies.CompressorFactory{}
 	fmt.Println("------------------------------------")
-	if strategy, err := strategyFactory.CreateStrategy("v1"); err == nil {
-		module.SetCompressorStrategy(strategy)
-		compressed, err := module.Compress()
-		if err != nil {
+	versions := []string{"v1", "v2", "v3", "v4", "v5"}
+	for _, version := range versions {
+		if strategy, err := strategyFactory.CreateStrategy(version); err == nil {
+			module.SetCompressorStrategy(strategy)
+			compressed, err := module.Compress()
+			if err != nil {
+				fmt.Println(err)
+			}
+			fmt.Println(compressed)
+		} else {
 			fmt.Println(err)
 		}
-		fmt.Println(compressed)
-	} else {
-		fmt.Println(err)
-	}
-
-	if strategy, err := strategyFactory.CreateStrategy("v2"); err == nil {
-		module.SetCompressorStrategy(strategy)
-		compressed, err := module.Compress()
-		if err != nil {
-			fmt.Println(err)
-		}
-		fmt.Println(compressed)
-	} else {
-		fmt.Println(err)
-	}
-
-	if strategy, err := strategyFactory.CreateStrategy("v3"); err == nil {
-		module.SetCompressorStrategy(strategy)
-		compressed, err := module.Compress()
-		if err != nil {
-			fmt.Println(err)
-		}
-		fmt.Println(compressed)
-	} else {
-		fmt.Println(err)
-	}
-
-	if strategy, err := strategyFactory.CreateStrategy("v4"); err == nil {
-		module.SetCompressorStrategy(strategy)
-		compressed, err := module.Compress()
-		if err != nil {
-			fmt.Println(err)
-		}
-		fmt.Println(compressed)
-	} else {
-		fmt.Println(err)
-	}
-
-	if strategy, err := strategyFactory.CreateStrategy("v5"); err == nil {
-		module.SetCompressorStrategy(strategy)
-		compressed, err := module.Compress()
-		if err != nil {
-			fmt.Println(err)
-		}
-		fmt.Println(compressed)
-	} else {
-		fmt.Println(err)
 	}
 	fmt.Println("------------------------------------")
 }
