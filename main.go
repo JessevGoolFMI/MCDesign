@@ -17,13 +17,13 @@ Key Components and Flow:
 
     Initialization: The program initializes a MasterController and a DefaultModuleFactory. It then creates and registers several modules (module1, module2, module3) and a specialized module (specialModule) with the controller. This setup establishes a mediated environment where modules can communicate indirectly through the mediator.
 
-    Module Creation and Registration: The program creates three modules (module1, module2, module3) and a specialized module (specialModule) using the DefaultModuleFactory. Each module is registered with the MasterController.
+    BaseModule Creation and Registration: The program creates three modules (module1, module2, module3) and a specialized module (specialModule) using the DefaultModuleFactory. Each module is registered with the MasterController.
 
     Subscription and Unsubscription: The example demonstrates how modules can subscribe to and unsubscribe from values. Module1 subscribes to Module2's "x" value updates and later unsubscribes. CompressorModule subscribes to Module2's "x" value updates and sets a custom notification callback to handle value updates.
 
     Value Publishing: A goroutine simulates Module2's "x" value changing every 500 milliseconds. When Module2 publishes a new value, the mediator notifies all subscribers, including Module1 and CompressorModule.
 
-    Specialized Module: The CompressorModule is a specialized version of the Module that includes an additional field (specialValue). It demonstrates how modules can be extended to provide additional functionality, such as setting a custom notification callback.
+    Specialized BaseModule: The CompressorModule is a specialized version of the BaseModule that includes an additional field (specialValue). It demonstrates how modules can be extended to provide additional functionality, such as setting a custom notification callback.
 
     Dynamic Subscription Management: The example includes dynamic subscription management, where Module1 unsubscribes from Module2's "x" value updates and then resubscribes after a delay. This showcases the flexibility of the mediator pattern in managing subscriptions.
 
@@ -112,8 +112,8 @@ func testDispenserModule(module *TestDesign.DispenserModule) {
 	versions := []string{"v1", "v2", "v3", "v4", "v5"}
 	for _, version := range versions {
 		if strategy, err := strategyFactory.CreateStrategy(version); err == nil {
-			module.SetDispenserStrategy(strategy)
-			compressed, err := module.Dispense()
+			module.SetStrategy(strategy)
+			compressed, err := module.Execute()
 			if err != nil {
 				fmt.Println(err)
 			}
@@ -131,8 +131,8 @@ func testCompressorModule(module *TestDesign.CompressorModule) {
 	versions := []string{"v1", "v2", "v3", "v4", "v5"}
 	for _, version := range versions {
 		if strategy, err := strategyFactory.CreateStrategy(version); err == nil {
-			module.SetCompressorStrategy(strategy)
-			compressed, err := module.Compress()
+			module.SetStrategy(strategy)
+			compressed, err := module.Execute()
 			if err != nil {
 				fmt.Println(err)
 			}
@@ -144,7 +144,7 @@ func testCompressorModule(module *TestDesign.CompressorModule) {
 	fmt.Println("------------------------------------")
 }
 
-func testSubscriptions(controller *TestDesign.MasterController, module *TestDesign.Module) {
+func testSubscriptions(controller *TestDesign.MasterController, module *TestDesign.BaseModule) {
 	fmt.Println("------------------------------------")
 	fmt.Printf("Unsubscribing %v from x on module 2\n", module.GetId())
 	module.UnsubscribeFromTopic("x", "module2")
@@ -154,7 +154,7 @@ func testSubscriptions(controller *TestDesign.MasterController, module *TestDesi
 	controller.DisplaySubscriptions()
 }
 
-func testUnregisterModule(controller *TestDesign.MasterController, module *TestDesign.Module) {
+func testUnregisterModule(controller *TestDesign.MasterController, module *TestDesign.BaseModule) {
 	fmt.Println("------------------------------------")
 	moduleId := module.GetId()
 	fmt.Printf("Unregistering %s\n", moduleId)
@@ -175,7 +175,7 @@ func testUnregisterModule(controller *TestDesign.MasterController, module *TestD
 	fmt.Println("------------------------------------")
 }
 
-func testErrorState(module *TestDesign.Module) {
+func testErrorState(module *TestDesign.BaseModule) {
 	fmt.Println("------------------------------------")
 	fmt.Printf("Putting %v in error state\n", module.GetId())
 	module.SetState(TestDesign.ErrorState)
@@ -189,7 +189,7 @@ func testErrorState(module *TestDesign.Module) {
 	fmt.Println("------------------------------------")
 }
 
-func unregisterRandomModule(controller *TestDesign.MasterController, module *TestDesign.Module) {
+func unregisterRandomModule(controller *TestDesign.MasterController, module *TestDesign.BaseModule) {
 	fmt.Println("Unregistering module:", module.GetId())
 	err := controller.UnregisterModule(module.GetId())
 	if err != nil {
@@ -209,14 +209,14 @@ func unregisterRandomModule(controller *TestDesign.MasterController, module *Tes
 }
 
 // Helper function to select random modules to unregister
-func selectRandomModules(controller *TestDesign.MasterController, amount int) []*TestDesign.Module {
+func selectRandomModules(controller *TestDesign.MasterController, amount int) []*TestDesign.BaseModule {
 	controllerModules := controller.GetModules()
 	keys := make([]string, 0, len(controllerModules))
 	for key := range controllerModules {
 		keys = append(keys, key)
 	}
 
-	modulesToUnregister := make([]*TestDesign.Module, 0, amount)
+	modulesToUnregister := make([]*TestDesign.BaseModule, 0, amount)
 	for i := 0; i < amount; i++ {
 		if len(keys) == 0 {
 			// If there are no more modules to select, break the loop.
@@ -246,7 +246,7 @@ func unregisterRandomModulesAsync(controller *TestDesign.MasterController, amoun
 
 	for _, module := range modulesToUnregister {
 		wg.Add(1)
-		go func(m *TestDesign.Module) {
+		go func(m *TestDesign.BaseModule) {
 			defer wg.Done()
 			unregisterRandomModule(controller, m)
 		}(module)

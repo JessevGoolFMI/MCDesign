@@ -5,7 +5,7 @@ This file defines the ICommand interface and its concrete implementations (Subsc
 
 Key Features:
 
-    ICommand Interface: The ICommand interface defines a single method, Execute, which takes a pointer to a Module as its argument. This method is intended to be implemented by concrete command structs to perform specific actions.
+    ICommand Interface: The ICommand interface defines a single method, Execute, which takes a pointer to a BaseModule as its argument. This method is intended to be implemented by concrete command structs to perform specific actions.
 
     SubscribeCommand Struct: The SubscribeCommand struct represents a command to subscribe a module to a value. It implements the Execute method by calling the Subscribe method on the module's mediator, passing the subscriber ID, publisher ID, and value name.
 
@@ -20,7 +20,7 @@ This file showcases the command pattern in Go, focusing on how commands encapsul
 
 // ICommand interface
 type ICommand interface {
-	Execute(module *Module) error
+	Execute(module *BaseModule) error
 }
 
 // SubscribeCommand struct
@@ -30,7 +30,7 @@ type SubscribeCommand struct {
 	topic        string
 }
 
-func (sc *SubscribeCommand) Execute(module *Module) error {
+func (sc *SubscribeCommand) Execute(module *BaseModule) error {
 	module.Mediator.Subscribe(sc.subscriberID, sc.publisherID, sc.topic)
 	return nil
 }
@@ -45,7 +45,7 @@ type UnsubscribeCommand struct {
 	topic        string
 }
 
-func (uc *UnsubscribeCommand) Execute(module *Module) error {
+func (uc *UnsubscribeCommand) Execute(module *BaseModule) error {
 	module.Mediator.Unsubscribe(uc.subscriberID, uc.publisherID, uc.topic)
 	return nil
 }
@@ -57,7 +57,7 @@ type PublishValueCommand struct {
 	value       interface{}
 }
 
-func (svc *PublishValueCommand) Execute(module *Module) error {
+func (svc *PublishValueCommand) Execute(module *BaseModule) error {
 	if module.id == svc.publisherID {
 		module.Mediator.NotifySubscribers(svc.publisherID, svc.topic, svc.value)
 	}

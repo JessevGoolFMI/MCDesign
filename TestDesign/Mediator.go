@@ -7,7 +7,7 @@ import (
 )
 
 /*
-This file contains the implementation of a simple mediator pattern in Go, specifically designed for managing and executing commands in a thread-safe manner. The MasterController struct serves as the central mediator, facilitating communication between different modules (Module and CompressorModule) by managing subscriptions, executing commands, and notifying subscribers about value changes.
+This file contains the implementation of a simple mediator pattern in Go, specifically designed for managing and executing commands in a thread-safe manner. The MasterController struct serves as the central mediator, facilitating communication between different modules (BaseModule and CompressorModule) by managing subscriptions, executing commands, and notifying subscribers about value changes.
 
 Key Features:
 
@@ -29,7 +29,7 @@ This implementation demonstrates a practical application of the mediator and com
 // IMediator interface
 type IMediator interface {
 	SendCommand(command ICommand, targetID string)
-	GetModule(id string) *Module
+	GetModule(id string) *BaseModule
 	Subscribe(subscriberID, publisherID, valueName string)
 	Unsubscribe(subscriberID, publisherID, valueName string)
 	NotifySubscribers(publisherID, valueName string, value interface{})
@@ -37,7 +37,7 @@ type IMediator interface {
 
 // MasterController struct
 type MasterController struct {
-	modules       map[string]*Module
+	modules       map[string]*BaseModule
 	subscriptions map[string]map[string]bool
 	commandQueue  chan commandWithTargetID // Command queue channel
 	wg            sync.WaitGroup
@@ -50,7 +50,7 @@ type commandWithTargetID struct {
 
 func NewMasterController() *MasterController {
 	mc := &MasterController{
-		modules:       make(map[string]*Module),
+		modules:       make(map[string]*BaseModule),
 		subscriptions: make(map[string]map[string]bool),
 		commandQueue:  make(chan commandWithTargetID), // Initialize the command queue channel
 	}
@@ -65,7 +65,7 @@ func NewMasterController() *MasterController {
 	return mc
 }
 
-func (mc *MasterController) GetModules() map[string]*Module {
+func (mc *MasterController) GetModules() map[string]*BaseModule {
 	return mc.modules
 }
 
@@ -137,12 +137,12 @@ func (mc *MasterController) NotifySubscribers(publisherID, valueName string, val
 }
 
 func (mc *MasterController) RegisterModule(module interface{}) error {
-	if m, ok := module.(*Module); ok {
+	if m, ok := module.(*BaseModule); ok {
 		mc.modules[m.id] = m
 	} else if sm, ok := module.(*CompressorModule); ok {
-		mc.modules[sm.id] = sm.Module
+		mc.modules[sm.id] = sm.BaseModule
 	} else if sm, ok := module.(*DispenserModule); ok {
-		mc.modules[sm.id] = sm.Module
+		mc.modules[sm.id] = sm.BaseModule
 	} else {
 		return errors.New("module not supported")
 	}
@@ -164,6 +164,6 @@ func (mc *MasterController) SendCommand(command ICommand, targetID string) {
 	mc.commandQueue <- commandWithTargetID{command: command, targetID: targetID}
 }
 
-func (mc *MasterController) GetModule(id string) *Module {
+func (mc *MasterController) GetModule(id string) *BaseModule {
 	return mc.modules[id]
 }
