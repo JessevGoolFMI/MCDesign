@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"mcs/TestDesign/Strategies"
+	"mcs/TestDesign/Strategies/CompressorStrategies"
 	"time"
 )
 
@@ -164,17 +165,17 @@ func (m *BaseModule) PublishToTopic(topic string, value interface{}) {
 type CompressorModule struct {
 	*BaseModule
 	specialValue interface{}
-	compressor   Strategies.Strategy
+	compressor   func(interface{}) (interface{}, error)
 }
 
 func (cm *CompressorModule) Execute() (interface{}, error) {
 	if cm.compressor == nil {
 		return nil, errors.New("execute wasn't set correctly")
 	}
-	return cm.compressor.Execute(cm.specialValue)
+	return cm.compressor(cm.specialValue)
 }
 
-func (cm *CompressorModule) SetStrategy(strategy Strategies.Strategy) {
+func (cm *CompressorModule) SetStrategy(strategy CompressorStrategies.CompressorFunc) {
 	cm.compressor = strategy
 }
 

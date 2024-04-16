@@ -5,9 +5,9 @@ import (
 	"mcs/TestDesign/Strategies"
 )
 
-type DispenserFactory struct{}
+type DispenserStrategyFactory struct{}
 
-func (f *DispenserFactory) CreateStrategy(identifier string) (Strategies.Strategy, error) {
+func (f *DispenserStrategyFactory) CreateStrategy(identifier string) (Strategies.Strategy, error) {
 	switch identifier {
 	case "v1":
 		return &DispenserV1{}, nil

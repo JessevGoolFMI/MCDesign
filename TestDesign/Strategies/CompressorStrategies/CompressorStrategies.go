@@ -9,9 +9,9 @@ import (
 	"fmt"
 )
 
-type CompressorV1 struct{}
+type CompressorFunc func(interface{}) (interface{}, error)
 
-func (c *CompressorV1) Execute(value interface{}) (interface{}, error) {
+func CompressorV1(value interface{}) (interface{}, error) {
 	var buf bytes.Buffer
 	enc := gob.NewEncoder(&buf)
 	if err := enc.Encode(value); err != nil {
@@ -24,9 +24,7 @@ func (c *CompressorV1) Execute(value interface{}) (interface{}, error) {
 }
 
 // CompressorV2 represents the second version of the compressor.
-type CompressorV2 struct{}
-
-func (c *CompressorV2) Execute(value interface{}) (interface{}, error) {
+func CompressorV2(value interface{}) (interface{}, error) {
 	compressedData, err := json.Marshal(value)
 	if err != nil {
 		fmt.Println("Error encoding data:", err)
@@ -35,9 +33,7 @@ func (c *CompressorV2) Execute(value interface{}) (interface{}, error) {
 	return compressedData, nil
 }
 
-type CompressorV3 struct{}
-
-func (c *CompressorV3) Execute(value interface{}) (interface{}, error) {
+func CompressorV3(value interface{}) (interface{}, error) {
 	var buf bytes.Buffer
 	gzipWriter := gzip.NewWriter(&buf)
 	defer gzipWriter.Close()
@@ -56,9 +52,7 @@ func (c *CompressorV3) Execute(value interface{}) (interface{}, error) {
 	return buf.Bytes(), nil
 }
 
-type CompressorV4 struct{}
-
-func (c *CompressorV4) Execute(value interface{}) (interface{}, error) {
+func CompressorV4(value interface{}) (interface{}, error) {
 	// Convert the interface to a string
 	str, ok := value.(string)
 	if !ok {

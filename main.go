@@ -107,7 +107,7 @@ func subscriptions() {
 }
 
 func testDispenserModule(module *TestDesign.DispenserModule) {
-	strategyFactory := DispenserStrategies.DispenserFactory{}
+	strategyFactory := DispenserStrategies.DispenserStrategyFactory{}
 	fmt.Println("------------------------------------")
 	versions := []string{"v1", "v2", "v3", "v4", "v5"}
 	for _, version := range versions {
@@ -126,7 +126,7 @@ func testDispenserModule(module *TestDesign.DispenserModule) {
 }
 
 func testCompressorModule(module *TestDesign.CompressorModule) {
-	strategyFactory := CompressorStrategies.CompressorFactory{}
+	strategyFactory := CompressorStrategies.CompressorStrategyFactory{}
 	fmt.Println("------------------------------------")
 	versions := []string{"v1", "v2", "v3", "v4", "v5"}
 	for _, version := range versions {
